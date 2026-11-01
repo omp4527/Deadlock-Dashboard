@@ -1,0 +1,953 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OS Resource Manager — Deadlock Analysis & Resource Allocation Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
+        rel="stylesheet">
+</head>
+
+<body>
+    <div class="app-layout">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="brand-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                        <line x1="8" y1="21" x2="16" y2="21"></line>
+                        <line x1="12" y1="17" x2="12" y2="21"></line>
+                    </svg>
+                </div>
+                <div class="brand-text">
+                    <h2>OS Resource Manager</h2>
+                    <span class="brand-sub">Deadlock & Banker's Suite</span>
+                </div>
+            </div>
+
+            <div class="backend-status-card">
+                <div class="status-indicator-dot online" id="backendDot"></div>
+                <div class="status-text-block">
+                    <span class="status-title">Backend Engine</span>
+                    <span class="status-detail" id="backendEngineText">Connecting Kernel...</span>
+                </div>
+            </div>
+
+            <nav class="sidebar-nav">
+                <button class="nav-item active" data-target="section-overview">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="3" width="7" height="7"></rect>
+                        <rect x="14" y="3" width="7" height="7"></rect>
+                        <rect x="14" y="14" width="7" height="7"></rect>
+                        <rect x="3" y="14" width="7" height="7"></rect>
+                    </svg>
+                    <span>1. Dashboard Overview</span>
+                </button>
+                <button class="nav-item" data-target="section-setup">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 20h9"></path>
+                        <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+                    </svg>
+                    <span>2. Allocation Setup</span>
+                </button>
+                <button class="nav-item" data-target="section-banker">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                    </svg>
+                    <span>3. Banker’s Algorithm</span>
+                </button>
+                <button class="nav-item" data-target="section-request">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+                    </svg>
+                    <span>4. Request Simulator</span>
+                </button>
+                <button class="nav-item" data-target="section-deadlock">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line>
+                    </svg>
+                    <span>5. Deadlock Detection</span>
+                </button>
+                <button class="nav-item" data-target="section-prevention">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                    </svg>
+                    <span>6. Prevention & Recovery</span>
+                </button>
+                <button class="nav-item" data-target="section-tests">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="9 11 12 14 22 4"></polyline>
+                        <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+                    </svg>
+                    <span>7. Test Cases & Results</span>
+                </button>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="footer-section">
+                    <span class="footer-label">Teacher / Mentor</span>
+                    <span class="footer-name mentor-name">Mr.Vijaykumar Mantri Sir</span>
+                </div>
+                <div class="footer-section">
+                    <span class="footer-label">Students</span>
+                    <span class="footer-names student-names">Vedant, Om, Sanchit, Yuvraj</span>
+                </div>
+                <div class="footer-divider"></div>
+                <div class="footer-meta">
+                    <span class="course-tag">CS304 Operating Systems</span>
+                    <span class="author-tag">IA Assignment Activity 2</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Top App Bar -->
+            <header class="top-bar">
+                <div class="top-title-area">
+                    <button class="mobile-toggle-btn" id="mobileToggle" aria-label="Toggle menu">☰</button>
+                    <div>
+                        <h1 class="main-title">OS Resource Manager</h1>
+                        <p class="main-subtitle">Deadlock Analysis & Resource Allocation Dashboard</p>
+                    </div>
+                </div>
+                <div class="top-action-area">
+                    <button class="btn btn-secondary btn-sm" id="btnQuickLoadSample">
+                        <span>Load Sample</span>
+                    </button>
+                    <button class="btn btn-primary btn-sm" id="btnRunSafetyGlobal">
+                        <span>Run Safety Check</span>
+                    </button>
+                </div>
+            </header>
+
+            <!-- Container for Sections -->
+            <div class="content-scrollable">
+
+                <!-- SECTION 1: DASHBOARD OVERVIEW -->
+                <section id="section-overview" class="content-section active">
+                    <div class="section-header">
+                        <h2>Dashboard Overview</h2>
+                        <p>Real-time system state metrics derived from kernel backend calculation.</p>
+                    </div>
+
+                    <!-- Metrics Cards Grid -->
+                    <div class="metrics-grid">
+                        <div class="metric-card">
+                            <div class="metric-icon blue">
+                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                                    <circle cx="9" cy="7" r="4"></circle>
+                                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                                </svg>
+                            </div>
+                            <div class="metric-info">
+                                <span class="metric-label">Active Processes</span>
+                                <span class="metric-value" id="cardProcessCount">5</span>
+                                <span class="metric-meta" id="cardProcessMeta">P0, P1, P2, P3, P4</span>
+                            </div>
+                        </div>
+
+                        <div class="metric-card">
+                            <div class="metric-icon purple">
+                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+                                    <polyline points="2 17 12 22 22 17"></polyline>
+                                    <polyline points="2 12 12 17 22 12"></polyline>
+                                </svg>
+                            </div>
+                            <div class="metric-info">
+                                <span class="metric-label">Resource Types</span>
+                                <span class="metric-value" id="cardResourceCount">3</span>
+                                <span class="metric-meta" id="cardResourceMeta">R0 (A), R1 (B), R2 (C)</span>
+                            </div>
+                        </div>
+
+                        <div class="metric-card">
+                            <div class="metric-icon green">
+                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <path
+                                        d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z">
+                                    </path>
+                                    <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+                                    <line x1="12" y1="22.08" x2="12" y2="12"></line>
+                                </svg>
+                            </div>
+                            <div class="metric-info">
+                                <span class="metric-label">Available Resources</span>
+                                <span class="metric-value font-mono" id="cardAvailableVector">[3, 3, 2]</span>
+                                <span class="metric-meta" id="cardTotalVector">Total: [10, 5, 7]</span>
+                            </div>
+                        </div>
+
+                        <div class="metric-card">
+                            <div class="metric-icon emerald">
+                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                                </svg>
+                            </div>
+                            <div class="metric-info">
+                                <span class="metric-label">System Safety State</span>
+                                <div class="badge-wrapper">
+                                    <span class="badge badge-safe" id="cardSafetyBadge">Safe State</span>
+                                </div>
+                                <span class="metric-meta" id="cardSafeSequence">&lt;P1, P3, P4, P0, P2&gt;</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Status Badges Showcase Bar -->
+                    <div class="card status-legend-card">
+                        <div class="legend-header">
+                            <h3>Dashboard Status Indicators</h3>
+                            <span class="legend-sub">State flags generated by kernel evaluations</span>
+                        </div>
+                        <div class="badges-row">
+                            <div class="badge-item">
+                                <span class="badge badge-safe">Safe</span>
+                                <span class="badge-desc">Banker's safe sequence exists</span>
+                            </div>
+                            <div class="badge-item">
+                                <span class="badge badge-unsafe">Unsafe</span>
+                                <span class="badge-desc">Deadlock cannot be avoided</span>
+                            </div>
+                            <div class="badge-item">
+                                <span class="badge badge-waiting">Waiting</span>
+                                <span class="badge-desc">Request exceeds Available</span>
+                            </div>
+                            <div class="badge-item">
+                                <span class="badge badge-denied">Denied</span>
+                                <span class="badge-desc">Request leads to unsafe state</span>
+                            </div>
+                            <div class="badge-item">
+                                <span class="badge badge-deadlocked">Deadlocked</span>
+                                <span class="badge-desc">Circular wait condition confirmed</span>
+                            </div>
+                            <div class="badge-item">
+                                <span class="badge badge-invalid">Invalid Input</span>
+                                <span class="badge-desc">Constraint / syntax error</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Two-column state overview -->
+                    <div class="two-col-grid">
+                        <div class="card">
+                            <div class="card-header">
+                                <h3>Current System Configuration</h3>
+                                <button class="btn btn-outline btn-xs" id="btnGoToSetup">Edit in Setup</button>
+                            </div>
+                            <div class="table-responsive">
+                                <table class="data-table" id="overviewMatricesTable">
+                                    <thead>
+                                        <tr>
+                                            <th>Process</th>
+                                            <th>Allocation (Held)</th>
+                                            <th>Max Demand</th>
+                                            <th>Remaining Need</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="overviewTableBody">
+                                        <!-- Dynamically populated -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <div class="card-header">
+                                <h3>Latest Operation & Request Activity</h3>
+                                <span class="badge badge-outline" id="overviewLastActionBadge">Ready</span>
+                            </div>
+                            <div class="activity-log-box" id="overviewActivityBox">
+                                <div class="activity-entry">
+                                    <span class="activity-time">00:00:00</span>
+                                    <span class="activity-msg">System initialized with baseline 5-process 3-resource
+                                        dataset.</span>
+                                </div>
+                                <div class="activity-entry">
+                                    <span class="activity-time">00:00:01</span>
+                                    <span class="activity-msg">Kernel backend connected on port 8080. Safety check
+                                        verified.</span>
+                                </div>
+                            </div>
+                            <div class="overview-quick-tools">
+                                <button class="btn btn-outline btn-sm" id="btnQuickTestAll">Run 6 Test Cases</button>
+                                <button class="btn btn-outline btn-sm" id="btnQuickSimulateReq">Simulate
+                                    Request</button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- SECTION 2: RESOURCE ALLOCATION SETUP -->
+                <section id="section-setup" class="content-section">
+                    <div class="section-header">
+                        <h2>Resource Allocation Setup</h2>
+                        <p>Configure process counts, resource types, Allocation matrix, Maximum demand, and Available
+                            vectors.</p>
+                    </div>
+
+                    <!-- Setup Controls Card -->
+                    <div class="card setup-controls-card">
+                        <div class="setup-toolbar">
+                            <div class="setup-dimensions-group">
+                                <div class="setup-input-pill">
+                                    <label for="numProcessesInput" class="setup-input-label">Processes</label>
+                                    <input type="number" id="numProcessesInput" min="1" max="8" value="5"
+                                        class="setup-num-input" aria-label="Number of processes">
+                                    <span class="setup-range-tag">1–8</span>
+                                </div>
+
+                                <div class="setup-input-pill">
+                                    <label for="numResourcesInput" class="setup-input-label">Resource Types</label>
+                                    <input type="number" id="numResourcesInput" min="1" max="6" value="3"
+                                        class="setup-num-input" aria-label="Number of resource types">
+                                    <span class="setup-range-tag">1–6</span>
+                                </div>
+
+                                <button class="btn btn-primary btn-setup" id="btnApplyDimensions">
+                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2.5">
+                                        <polyline points="20 6 9 17 4 12"></polyline>
+                                    </svg>
+                                    <span>Apply Dimensions</span>
+                                </button>
+                            </div>
+
+                            <div class="setup-toolbar-divider"></div>
+
+                            <div class="setup-presets-group">
+                                <button class="btn btn-secondary btn-setup" id="btnLoadSampleData"
+                                    title="Load standard 5-process 3-resource benchmark dataset">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2">
+                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                        <polyline points="7 10 12 15 17 10"></polyline>
+                                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                                    </svg>
+                                    <span>Load Sample Data</span>
+                                </button>
+                                <button class="btn btn-outline btn-setup" id="btnResetData"
+                                    title="Reset all matrices and vectors">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2">
+                                        <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+                                        <path d="M3 3v5h5"></path>
+                                    </svg>
+                                    <span>Reset Data</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Streamlined Invariant Status Bar -->
+                        <div class="accounting-invariant-bar">
+                            <div class="invariant-left">
+                                <span class="invariant-badge">Resource Accounting</span>
+                                <span class="formula-text">Available [j] = Total Instances [j] &minus; &sum; Allocation
+                                    [i][j]</span>
+                            </div>
+                            <div class="invariant-right">
+                                <span class="totals-pill" id="calculatedTotalsDisplay">Total: [10, 5, 7]</span>
+                                <span class="avail-pill" id="calculatedAvailDisplay">Available: [3, 3, 2]</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Dynamic Matrices Input Section -->
+                    <div class="card setup-matrices-card">
+                        <div class="card-header">
+                            <h3>Matrix Input Tables</h3>
+                            <div class="btn-group">
+                                <button class="btn btn-outline btn-sm" id="btnValidateInputs">Validate Inputs</button>
+                                <button class="btn btn-primary btn-sm" id="btnCalculateNeed">Calculate Need</button>
+                            </div>
+                        </div>
+
+                        <!-- Validation Message Box -->
+                        <div id="setupValidationAlert" class="alert-box d-none"></div>
+
+                        <!-- Total & Available Vectors Grid -->
+                        <div class="vectors-grid">
+                            <div class="vector-input-wrapper">
+                                <div class="vector-header">
+                                    <h4>Total Resource Instances Vector</h4>
+                                    <span class="vector-badge input-badge">User Input (Total)</span>
+                                </div>
+                                <div class="vector-fields-row" id="totalInputsRow">
+                                    <!-- Inputs for Total instances A, B, C -->
+                                </div>
+                            </div>
+
+                            <div class="vector-input-wrapper readonly-vector-wrapper">
+                                <div class="vector-header">
+                                    <h4>Calculated Available Vector</h4>
+                                    <span class="vector-badge auto-badge">Auto: Total &minus; Allocated</span>
+                                </div>
+                                <div class="vector-fields-row" id="availableCalculatedRow">
+                                    <!-- Populated dynamically with Available = Total - Allocated -->
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Allocation & Maximum Tables Grid -->
+                        <div class="matrices-grid">
+                            <div class="matrix-box">
+                                <h4>Allocation Matrix (Currently Held)</h4>
+                                <div class="table-responsive">
+                                    <table class="matrix-table" id="allocationInputTable">
+                                        <!-- Header & rows populated dynamically -->
+                                    </table>
+                                </div>
+                            </div>
+
+                            <div class="matrix-box">
+                                <h4>Maximum Demand Matrix (Declared Claim)</h4>
+                                <div class="table-responsive">
+                                    <table class="matrix-table" id="maximumInputTable">
+                                        <!-- Header & rows populated dynamically -->
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Calculated Need Matrix (Readonly display) -->
+                        <div class="need-matrix-box mt-4">
+                            <h4>Calculated Need Matrix <code>(Need = Maximum − Allocation)</code></h4>
+                            <div class="table-responsive">
+                                <table class="matrix-table readonly-table" id="calculatedNeedTable">
+                                    <!-- Populated dynamically -->
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- SECTION 3: BANKER'S ALGORITHM -->
+                <section id="section-banker" class="content-section">
+                    <div class="section-header">
+                        <h2>Banker’s Algorithm for Deadlock Avoidance</h2>
+                        <p>Comprehensive step-by-step trace of Dijkstra’s Safety Algorithm computed by kernel.</p>
+                    </div>
+
+                    <!-- Safety Status Banner -->
+                    <div class="card safety-banner-card" id="bankerSafetyBanner">
+                        <div class="safety-banner-content">
+                            <div class="safety-icon-large" id="bankerSafetyIcon">
+                                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                                </svg>
+                            </div>
+                            <div class="safety-banner-text">
+                                <div class="safety-title-row">
+                                    <h3 id="bankerSafetyTitle">System Safety Status</h3>
+                                    <span class="badge badge-safe" id="bankerSafetyBadge">Safe State</span>
+                                </div>
+                                <p id="bankerSafetyExplanation" class="safety-explanation-text">
+                                    System is in a SAFE state! All processes can complete in sequence without circular
+                                    wait.
+                                </p>
+                                <div class="safe-sequence-box">
+                                    <span class="seq-label">Complete Safe Sequence:</span>
+                                    <div class="sequence-chips" id="bankerSequenceChips">
+                                        <!-- Chips populated dynamically -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="safety-banner-actions">
+                            <button class="btn btn-primary" id="btnRerunBanker">Re-run Safety Algorithm</button>
+                        </div>
+                    </div>
+
+                    <!-- Step-by-Step Trace Table -->
+                    <div class="card mt-4">
+                        <div class="card-header">
+                            <h3>Algorithm Execution Trace</h3>
+                            <span class="trace-subtitle">Step-by-step Work updates and completion milestones</span>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="data-table trace-table" id="bankerTraceTable">
+                                <thead>
+                                    <tr>
+                                        <th>Step #</th>
+                                        <th>Candidate Process</th>
+                                        <th>Work Before</th>
+                                        <th>Process Need</th>
+                                        <th>Need &le; Work?</th>
+                                        <th>Allocation Added</th>
+                                        <th>Work After</th>
+                                        <th>Finish Vector</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="bankerTraceTableBody">
+                                    <!-- Populated dynamically -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Educational Explanation Card -->
+                    <div class="card mt-4 info-card">
+                        <h3>Banker’s Safety Algorithm Mechanics</h3>
+                        <p>The safety algorithm determines whether allocating resources to processes leaves the system
+                            in a state from which every process can eventually terminate:</p>
+                        <ol class="algo-steps-list">
+                            <li><strong>Initialize:</strong> <code>Work = Available</code> and
+                                <code>Finish[i] = false</code> for all processes.
+                            </li>
+                            <li><strong>Search:</strong> Find an index <code>i</code> such that
+                                <code>Finish[i] == false</code> and <code>Need[i] &le; Work</code>.
+                            </li>
+                            <li><strong>Reclaim:</strong> If found, set <code>Work = Work + Allocation[i]</code>,
+                                <code>Finish[i] = true</code>, and repeat from Step 2.
+                            </li>
+                            <li><strong>Evaluate:</strong> If <code>Finish[i] == true</code> for all <code>i</code>, the
+                                system is <strong>Safe</strong>. Otherwise, it is <strong>Unsafe</strong>.</li>
+                        </ol>
+                    </div>
+                </section>
+
+                <!-- SECTION 4: RESOURCE REQUEST SIMULATOR -->
+                <section id="section-request" class="content-section">
+                    <div class="section-header">
+                        <h2>Resource Request Simulator</h2>
+                        <p>Simulate dynamic resource requests with speculative allocation, safety validation, and
+                            automated rollback.</p>
+                    </div>
+
+                    <div class="two-col-grid">
+                        <!-- Request Submission Form -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h3>Submit Resource Request</h3>
+                            </div>
+                            <form id="resourceRequestForm">
+                                <div class="form-group mb-3">
+                                    <label for="requestProcessSelect">Select Requesting Process:</label>
+                                    <select id="requestProcessSelect" class="form-control">
+                                        <!-- Populated dynamically -->
+                                    </select>
+                                </div>
+
+                                <div class="form-group mb-3">
+                                    <label>Request Vector (Instances requested):</label>
+                                    <div class="vector-fields-row" id="requestVectorFields">
+                                        <!-- Inputs populated dynamically -->
+                                    </div>
+                                </div>
+
+                                <div class="quick-preset-buttons mb-3">
+                                    <span class="preset-label">Test Presets:</span>
+                                    <button type="button" class="btn btn-outline btn-xs" id="btnPresetValidSafe">Safe
+                                        Request (P1: 1,0,2)</button>
+                                    <button type="button" class="btn btn-outline btn-xs"
+                                        id="btnPresetExceedAvail">Exceeds Avail (P0: 0,4,0)</button>
+                                    <button type="button" class="btn btn-outline btn-xs" id="btnPresetUnsafe">Unsafe
+                                        Request (P0: 0,3,0)</button>
+                                    <button type="button" class="btn btn-outline btn-xs"
+                                        id="btnPresetExceedNeed">Exceeds Need (P1: 4,0,0)</button>
+                                </div>
+
+                                <div class="form-actions">
+                                    <button type="submit" class="btn btn-primary" id="btnSubmitRequest">
+                                        Process Request
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+
+                        <!-- Decision & Explanation Display -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h3>Kernel Decision & Rationale</h3>
+                                <span class="badge badge-waiting" id="requestDecisionBadge">Pending</span>
+                            </div>
+                            <div class="decision-content" id="requestDecisionBox">
+                                <p class="text-muted">Submit a request to trigger kernel validation, tentative
+                                    allocation, and safety evaluation.</p>
+                            </div>
+
+                            <div class="validation-rules-checklist">
+                                <h4>Ordered Validation Rules Applied:</h4>
+                                <ul class="checklist">
+                                    <li id="chkRule1">1. Process identifier exists in system</li>
+                                    <li id="chkRule2">2. Request values are non-negative integers</li>
+                                    <li id="chkRule3">3. Request &le; Process Remaining Need (Max claim check)</li>
+                                    <li id="chkRule4">4. Request &le; Currently Available resources</li>
+                                    <li id="chkRule5">5. Speculative allocation produces a Safe State</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Before vs After Resource Comparison -->
+                    <div class="card mt-4" id="requestComparisonCard">
+                        <div class="card-header">
+                            <h3>State Comparison: Before vs After Request</h3>
+                            <span class="text-sm text-muted" id="requestStateCommitText">State not yet committed</span>
+                        </div>
+                        <div class="two-col-grid">
+                            <div class="state-subcard">
+                                <h4>Before Request (Original State)</h4>
+                                <div class="mini-vector">Available: <code id="beforeAvailText">[3, 3, 2]</code></div>
+                                <div class="table-responsive">
+                                    <table class="data-table compact-table" id="tableBeforeRequest">
+                                        <thead>
+                                            <tr>
+                                                <th>Process</th>
+                                                <th>Alloc</th>
+                                                <th>Need</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="tableBeforeRequestBody"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <div class="state-subcard">
+                                <h4>After Request (Resulting State)</h4>
+                                <div class="mini-vector">Available: <code id="afterAvailText">[3, 3, 2]</code></div>
+                                <div class="table-responsive">
+                                    <table class="data-table compact-table" id="tableAfterRequest">
+                                        <thead>
+                                            <tr>
+                                                <th>Process</th>
+                                                <th>Alloc</th>
+                                                <th>Need</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="tableAfterRequestBody"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- SECTION 5: DEADLOCK DETECTION -->
+                <section id="section-deadlock" class="content-section">
+                    <div class="section-header">
+                        <h2>Deadlock Detection & RAG Graph Analysis</h2>
+                        <p>Dedicated deadlock detection engine for single-instance and multiple-instance resource
+                            systems.</p>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="model-toggle-group">
+                                <label class="radio-label">
+                                    <input type="radio" name="detectionModel" value="multiple" checked
+                                        id="radioMultiInstance">
+                                    <span>Multiple-Instance Model (Vector Algorithm)</span>
+                                </label>
+                                <label class="radio-label">
+                                    <input type="radio" name="detectionModel" value="single" id="radioSingleInstance">
+                                    <span>Single-Instance Model (RAG Cycle Detection)</span>
+                                </label>
+                            </div>
+                            <div class="btn-group">
+                                <button class="btn btn-secondary btn-sm" id="btnLoadDeadlockScenario">Load Deadlock
+                                    Scenario</button>
+                                <button class="btn btn-outline btn-sm" id="btnLoadNoDeadlockScenario">Load Clean
+                                    Scenario</button>
+                                <button class="btn btn-primary btn-sm" id="btnRunDetection">Run Detection</button>
+                            </div>
+                        </div>
+
+                        <!-- Detection Result Banner -->
+                        <div class="detection-result-banner" id="detectionResultBanner">
+                            <div class="result-badge-container">
+                                <span class="badge badge-deadlocked" id="detectionStatusBadge">Detection Ready</span>
+                            </div>
+                            <div class="result-details" id="detectionDetailsText">
+                                Click "Run Detection" to analyze outstanding requests against available resources.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="two-col-grid mt-4">
+                        <!-- Matrices: Allocation, Request, Available -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h3>Outstanding Request & Allocation Matrices</h3>
+                            </div>
+                            <div class="vector-input-wrapper mb-3">
+                                <h4>Available Resources Vector</h4>
+                                <div class="vector-fields-row" id="detectionAvailableRow"></div>
+                            </div>
+
+                            <div class="matrices-grid">
+                                <div class="matrix-box">
+                                    <h4>Allocation Matrix</h4>
+                                    <table class="matrix-table" id="detectionAllocTable"></table>
+                                </div>
+                                <div class="matrix-box">
+                                    <h4>Outstanding Request Matrix</h4>
+                                    <table class="matrix-table" id="detectionRequestTable"></table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Interactive Resource Allocation Graph (SVG) -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h3>Resource Allocation Graph (RAG)</h3>
+                                <span class="graph-legend">
+                                    <span class="legend-dot blue"></span> Process (Circle)
+                                    <span class="legend-dot green"></span> Resource (Box)
+                                    <span class="legend-dot red"></span> Cycle Edge
+                                </span>
+                            </div>
+                            <div class="rag-svg-container" id="ragSvgContainer">
+                                <svg id="ragSvg" width="100%" height="320" viewBox="0 0 500 320">
+                                    <!-- Dynamic SVG Graph nodes and edges -->
+                                </svg>
+                            </div>
+                            <div class="cycle-report-box mt-2" id="cycleReportBox">
+                                <strong>Cycle Analysis:</strong> <span id="cycleAnalysisText">No cycles detected.</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step-by-step Detection Trace Table -->
+                    <div class="card mt-4">
+                        <div class="card-header">
+                            <h3>Detection Procedure Trace</h3>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="data-table" id="detectionTraceTable">
+                                <thead>
+                                    <tr>
+                                        <th>Step #</th>
+                                        <th>Process Evaluated</th>
+                                        <th>Work Before</th>
+                                        <th>Outstanding Request</th>
+                                        <th>Allocation Reclaimed</th>
+                                        <th>Work After</th>
+                                        <th>Finish Vector</th>
+                                        <th>Evaluation Explanation</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="detectionTraceTableBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- SECTION 6: PREVENTION & RECOVERY -->
+                <section id="section-prevention" class="content-section">
+                    <div class="section-header">
+                        <h2>Deadlock Prevention & Recovery</h2>
+                        <p>Demonstrate prevention via strict resource ordering and recovery via process termination.</p>
+                    </div>
+
+                    <!-- Part A: Deadlock Prevention -->
+                    <div class="card">
+                        <div class="card-header">
+                            <div>
+                                <h3>Deadlock Prevention: Hierarchical Resource Ordering</h3>
+                                <p class="text-sm text-muted">Eliminates Circular Wait by assigning a global total order
+                                    to all resource types (Havender’s Principle).</p>
+                            </div>
+                            <button class="btn btn-primary btn-sm" id="btnSimulatePrevention">Run Prevention
+                                Policy</button>
+                        </div>
+
+                        <div class="prevention-policy-bar">
+                            <div class="order-config">
+                                <span class="order-label">Configured Acquisition Order:</span>
+                                <span class="order-hierarchy" id="preventionOrderText">R0 (Rank 0) &lt; R1 (Rank 1) &lt;
+                                    R2 (Rank 2)</span>
+                            </div>
+                            <div class="order-controls">
+                                <button class="btn btn-outline btn-xs" id="btnSetOrderDefault">Default Order (R0 &lt; R1
+                                    &lt; R2)</button>
+                                <button class="btn btn-outline btn-xs" id="btnSetOrderReverse">Reverse Order (R2 &lt; R1
+                                    &lt; R0)</button>
+                            </div>
+                        </div>
+
+                        <div class="table-responsive mt-3">
+                            <table class="data-table" id="preventionComplianceTable">
+                                <thead>
+                                    <tr>
+                                        <th>Process</th>
+                                        <th>Currently Held Resources</th>
+                                        <th>Highest Held Rank</th>
+                                        <th>Requested Resource</th>
+                                        <th>Requested Rank</th>
+                                        <th>Policy Status</th>
+                                        <th>Kernel Action & Reason</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="preventionComplianceTableBody"></tbody>
+                            </table>
+                        </div>
+
+                        <div class="two-col-grid mt-4">
+                            <div class="info-card">
+                                <h4>Why Circular Wait is Mathematically Prevented</h4>
+                                <p id="preventionProofText">
+                                    Let $F: R \rightarrow \mathbb{N}$ assign a unique rank to each resource. In any
+                                    circular wait $P_0 \rightarrow P_1 \rightarrow \dots \rightarrow P_k \rightarrow
+                                    P_0$, each request must have strictly higher rank than currently held resources
+                                    ($F(R_0) < F(R_1) < \dots < F(R_k) < F(R_0)$). This creates an impossible strict
+                                        integer inequality $F(R_0) < F(R_0)$. Hence circular wait cannot occur. </p>
+                            </div>
+                            <div class="info-card">
+                                <h4>Engineering Trade-offs</h4>
+                                <ul class="bullet-list" id="preventionTradeoffsList">
+                                    <li><strong>Reduced System Concurrency:</strong> Resources must be acquired in
+                                        predetermined rank order.</li>
+                                    <li><strong>Resource Under-utilization:</strong> Resources held earlier than needed
+                                        or released prematurely.</li>
+                                    <li><strong>Starvation Potential:</strong> Long processes needing high-ranked
+                                        resources may wait indefinitely.</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Part B: Deadlock Recovery -->
+                    <div class="card mt-4">
+                        <div class="card-header">
+                            <div>
+                                <h3>Deadlock Recovery: Process Termination Simulation</h3>
+                                <p class="text-sm text-muted">Select and abort a deadlocked process to reclaim its held
+                                    resources and resolve the circular wait.</p>
+                            </div>
+                        </div>
+
+                        <div class="recovery-controls-bar">
+                            <div class="form-group mb-0">
+                                <label for="recoveryProcessSelect">Select Process to Terminate:</label>
+                                <select id="recoveryProcessSelect" class="form-control">
+                                    <!-- Populated dynamically -->
+                                </select>
+                            </div>
+                            <button class="btn btn-danger" id="btnTerminateProcess">
+                                Abort Process & Reclaim Resources
+                            </button>
+                        </div>
+
+                        <!-- Recovery Result Notification -->
+                        <div class="recovery-result-box mt-3" id="recoveryResultBox">
+                            <div class="recovery-status-text" id="recoveryStatusText">
+                                Select a deadlocked process from above and click "Abort Process" to observe resource
+                                reclamation.
+                            </div>
+                        </div>
+
+                        <div class="two-col-grid mt-3">
+                            <div class="state-subcard">
+                                <h4>Pre-Termination Available</h4>
+                                <div class="mini-vector font-mono" id="recoveryPreAvail">[0, 0, 0]</div>
+                            </div>
+                            <div class="state-subcard">
+                                <h4>Post-Termination Available (Updated)</h4>
+                                <div class="mini-vector font-mono text-success" id="recoveryPostAvail">[3, 0, 3]</div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- SECTION 7: TEST CASES & RESULTS -->
+                <section id="section-tests" class="content-section">
+                    <div class="section-header">
+                        <h2>Test Cases & Analytical Results</h2>
+                        <p>Essential verification of all six assignment test cases (TC1 to TC6) computed natively by the
+                            backend kernel.</p>
+                    </div>
+
+                    <!-- Test Suite Metric Strip -->
+                    <div class="test-stats-grid">
+                        <div class="test-stat-card">
+                            <span class="test-stat-num" id="statTotalTests">6</span>
+                            <span class="test-stat-label">Total Tests</span>
+                        </div>
+                        <div class="test-stat-card success">
+                            <span class="test-stat-num" id="statPassedTests">6</span>
+                            <span class="test-stat-label">Passed (100%)</span>
+                        </div>
+                        <div class="test-stat-card">
+                            <span class="test-stat-num" id="statFailedTests">0</span>
+                            <span class="test-stat-label">Failed</span>
+                        </div>
+                        <div class="test-stat-card">
+                            <span class="test-stat-num font-mono" id="statEngine">C++ Kernel</span>
+                            <span class="test-stat-label">Execution Engine</span>
+                        </div>
+                    </div>
+
+                    <div class="card mt-3">
+                        <div class="card-header test-header-row">
+                            <div class="test-header-left">
+                                <h3>Assignment Test Suite</h3>
+                                <span class="badge badge-safe" id="testOverallBadge">All 6 Tests Passing</span>
+                            </div>
+                            <div class="test-header-actions">
+                                <button class="btn btn-outline btn-sm" id="btnToggleAllDetails">
+                                    <span>Expand All Details</span>
+                                </button>
+                                <button class="btn btn-primary btn-sm" id="btnExecuteAllTests">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2">
+                                        <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                                    </svg>
+                                    <span>Run All 6 Tests</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Progress Bar -->
+                        <div class="test-progress-strip">
+                            <div class="progress-bar-track">
+                                <div class="progress-bar-fill" id="testProgressFill" style="width: 100%;"></div>
+                            </div>
+                        </div>
+
+                        <!-- Sleek Minimal Test Cases Table -->
+                        <div class="table-responsive">
+                            <table class="data-table test-clean-table" id="analyticalResultsTable">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 85px;">Status</th>
+                                        <th style="width: 80px;">Test ID</th>
+                                        <th>Scenario / Objective</th>
+                                        <th>Kernel Result Summary</th>
+                                        <th style="width: 105px; text-align: center;">Details</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="analyticalTableBody">
+                                    <!-- Populated dynamically -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- Notification Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script src="app.js"></script>
+</body>
+
+</html>

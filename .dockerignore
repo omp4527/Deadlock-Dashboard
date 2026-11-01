@@ -1,0 +1,8 @@
+.git
+.DS_Store
+server.exe
+server
+*.o
+*.obj
+tests/
+
